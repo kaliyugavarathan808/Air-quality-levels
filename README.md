@@ -63,3 +63,59 @@ cleaned_file_path = "cleaned_air_quality_data.csv"
 df.to_csv(cleaned_file_path, index=False)
 
 print("\nCleaning complete. Cleaned file saved to:", cleaned_file_path)
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load data
+df = pd.read_csv("air_quality_data.csv")
+
+# Convert date column
+df['Date_Time'] = pd.to_datetime(df['Date_Time'], errors='coerce')
+df.dropna(subset=['Date_Time'], inplace=True)
+df.set_index('Date_Time', inplace=True)
+
+# Basic info
+print("Shape:", df.shape)
+print("\nMissing values:\n", df.isnull().sum())
+print("\nData types:\n", df.dtypes)
+print("\nSummary statistics:\n", df.describe())
+
+# Plot 1: AQI distribution
+plt.figure(figsize=(8, 4))
+sns.histplot(df['AQI'], bins=30, kde=True, color='skyblue')
+plt.title("AQI Distribution")
+plt.xlabel("AQI")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.show()
+
+# Plot : Time series of major pollutants
+plt.figure(figsize=(12, 6))
+df[['PM2.5', 'PM10']].plot()
+plt.title("Time Series - PM2.5 and PM10")
+plt.ylabel("Concentration (µg/m³)")
+plt.tight_layout()
+plt.show()
+
+# Plot : Boxplot for pollutants
+pollutants = ['PM2.5', 'PM10', 'NO', 'NO2', 'NOx', 'CO', 'SO2', 'O3', 'Benzene']
+plt.figure(figsize=(14, 6))
+df_melted = df[pollutants].melt(var_name='Pollutant', value_name='Value')
+sns.boxplot(x='Pollutant', y='Value', data=df_melted)
+plt.title("Boxplot of Pollutant Levels")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# Plot : Average AQI by hour
+df['hour'] = df.index.hour
+hourly_aqi = df.groupby('hour')['AQI'].mean()
+plt.figure(figsize=(10, 5))
+sns.lineplot(x=hourly_aqi.index, y=hourly_aqi.values)
+plt.title("Average AQI by Hour of Day")
+plt.xlabel("Hour")
+plt.ylabel("Average AQI")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
